@@ -1,16 +1,19 @@
 package com.previ.previ_backend.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 
-import java.sql.Timestamp;
 import java.util.UUID;
 
 @Entity
 @Table(name = "usuarios")
 @Inheritance(strategy = InheritanceType.JOINED)
+@Getter
+@Setter
 public class Usuario {
 
     @Id

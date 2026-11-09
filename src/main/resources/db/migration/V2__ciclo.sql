@@ -5,7 +5,8 @@ CREATE TABLE ciclo (
     data_fim DATE,
     observacao VARCHAR(255),
 
-    CONSTRAINT fk_ciclo_cliente REFERENCES cliente(id),
+    CONSTRAINT fk_ciclo_cliente
+        FOREIGN KEY (cliente_id) REFERENCES cliente(id),
 
     CONSTRAINT ck_datas_ciclo
         CHECK ( data_fim IS NULL OR data_fim >= data_inicio)

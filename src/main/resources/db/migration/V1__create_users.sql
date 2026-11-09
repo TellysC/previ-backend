@@ -19,13 +19,14 @@ CREATE TABLE cliente (
         FOREIGN KEY (id) REFERENCES usuarios (id)
 );
 
-CREATE TABLE cliente_telefone(
+CREATE TABLE cliente_telefone (
     cliente_id UUID NOT NULL,
     telefone VARCHAR(15) NOT NULL,
 
-    PRIMARY KEY (cliente_id, telefone
+    PRIMARY KEY (cliente_id, telefone),
 
     CONSTRAINT fk_telefone_cliente
-        FOREIGN KEY (cliente_id) REFERENCES cliente(id)
+        FOREIGN KEY (cliente_id)
+        REFERENCES cliente(id)
         ON DELETE CASCADE
 );
