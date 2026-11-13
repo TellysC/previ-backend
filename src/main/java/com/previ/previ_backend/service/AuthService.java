@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
-import java.rmi.AlreadyBoundException;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
@@ -82,7 +81,7 @@ public class AuthService {
         Authentication auth = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(email, dto.senha()));
 
-        Usuario usuario = usuarioRepository.findByEmailIgnoreCase(email)
+        Usuario usuario = usuarioRepository.findByEmailIgnoreCaseAndDeletedAtIsNull(email)
                 .orElseThrow(() -> new BadCredentialsException("Credenciais inválidas"));
 
         String accessToken = jwtService.gerarAccessToken(usuario, auth.getAuthorities());
