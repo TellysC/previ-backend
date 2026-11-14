@@ -10,16 +10,14 @@ import java.time.LocalTime;
 
 public record ExameRequestDTO(
 
-        @NotBlank
+        @NotBlank(message = "O nome é obrigatório")
         @Size(max = 150)
         String nome,
 
-        @NotNull
+        @NotNull(message = "A data é obrigatório")
         LocalDate data,
 
         LocalTime hora,
-
-        LocalDate dataRealizacao,
 
         @Size(max = 255)
         String local,

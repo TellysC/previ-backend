@@ -1,226 +1,168 @@
+    package com.previ.previ_backend.service;
+    import com.previ.previ_backend.dto.ExameRequestDTO;
+    import com.previ.previ_backend.dto.ExameResponseDTO;
+    import com.previ.previ_backend.dto.ExameUpdateDTO;
+    import com.previ.previ_backend.model.Cliente;
+    import com.previ.previ_backend.model.Exame;
+    import com.previ.previ_backend.repository.ExameRepository;
+    import com.previ.previ_backend.enums.StatusExame;
+    import org.springframework.http.HttpStatus;
+    import org.springframework.stereotype.Service;
+    import org.springframework.transaction.annotation.Transactional;
+    import org.springframework.web.server.ResponseStatusException;
+    import java.util.List;
+    import java.util.UUID;
+    import java.time.LocalDate;
+    import java.time.ZoneId;
 
-package com.previ.previ_backend.service;
+    @Service
+    public class ExameService {
 
-import com.previ.previ_backend.dto.ExameRequestDTO;
-import com.previ.previ_backend.dto.ExameResponseDTO;
-import com.previ.previ_backend.dto.ExameUpdateDTO;
-import com.previ.previ_backend.model.Cliente;
-import com.previ.previ_backend.model.Exame;
-import com.previ.previ_backend.model.Usuario;
-import com.previ.previ_backend.repository.ExameRepository;
-import com.previ.previ_backend.repository.UsuarioRepository;
-import com.previ.previ_backend.enums.StatusExame;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
-import java.util.List;
-import java.util.UUID;
-import java.time.LocalDate;
+        private static final ZoneId ZONA =
+                ZoneId.of("America/Sao_Paulo");
+        private final ExameRepository exameRepository;
+        private final AuthClienteService authClienteService;
 
-@Service
-public class ExameService {
-
-    private final ExameRepository exameRepository;
-    private final UsuarioRepository usuarioRepository;
-
-    public ExameService(
-            ExameRepository exameRepository,
-            UsuarioRepository usuarioRepository
-    ) {
-        this.exameRepository = exameRepository;
-        this.usuarioRepository = usuarioRepository;
-    }
-
-    // CADASTRAR EXAME
-    @Transactional
-    public ExameResponseDTO cadastrar(ExameRequestDTO dto) {
-
-        Cliente cliente = obterClienteAutenticado();
-
-        if (dto.dataRealizacao() != null &&
-                dto.dataRealizacao().isAfter(LocalDate.now())) {
-
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "A data de realização não pode estar no futuro"
-            );
+        public ExameService(
+                ExameRepository exameRepository,
+                AuthClienteService authClienteService
+        ) {
+            this.exameRepository = exameRepository;
+            this.authClienteService = authClienteService;
         }
 
-        Exame exame = new Exame();
+        // CADASTRAR EXAME
+        @Transactional
+        public ExameResponseDTO cadastrar(ExameRequestDTO dto) {
 
-        exame.setCliente(cliente);
-        exame.setNome(dto.nome());
-        exame.setData(dto.data());
-        exame.setHora(dto.hora());
-        exame.setDataRealizacao(dto.dataRealizacao());
-        exame.setLocal(dto.local());
-        exame.setObservacao(dto.observacao());
+            Cliente cliente = authClienteService.obterClienteAutenticado();
 
-        Exame exameSalvo = exameRepository.save(exame);
+            Exame exame = new Exame();
 
-        return ExameResponseDTO.fromEntity(exameSalvo);
-    }
+            exame.setCliente(cliente);
+            exame.setNome(dto.nome());
+            exame.setData(dto.data());
+            exame.setHora(dto.hora());
+            exame.setLocal(dto.local());
+            exame.setObservacao(dto.observacao());
 
-    // LISTAR EXAMES DO CLIENTE
-    @Transactional(readOnly = true)
-    public List<ExameResponseDTO> listar() {
+            Exame exameSalvo = exameRepository.save(exame);
 
-        Cliente cliente = obterClienteAutenticado();
-
-        return exameRepository.findByClienteId(cliente.getId())
-                .stream()
-                .map(ExameResponseDTO::fromEntity)
-                .toList();
-    }
-
-    // BUSCAR EXAME POR ID
-    @Transactional(readOnly = true)
-    public ExameResponseDTO buscarPorId(UUID exameId) {
-
-        Cliente cliente = obterClienteAutenticado();
-
-        Exame exame = exameRepository
-                .findByIdAndCliente_Id(exameId, cliente.getId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Exame não encontrado"
-                ));
-
-        return ExameResponseDTO.fromEntity(exame);
-    }
-
-    // IDENTIFICAR O CLIENTE AUTENTICADO
-    private Cliente obterClienteAutenticado() {
-
-        Authentication authentication = SecurityContextHolder
-                .getContext()
-                .getAuthentication();
-
-        if (authentication == null ||
-                !authentication.isAuthenticated()) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Usuário não autenticado"
-            );
+            return ExameResponseDTO.fromEntity(exameSalvo);
         }
 
-        UUID usuarioId;
+        // LISTAR EXAMES DO CLIENTE
+        @Transactional(readOnly = true)
+        public List<ExameResponseDTO> listar() {
 
-        try {
-            usuarioId = UUID.fromString(authentication.getName());
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(
-                    HttpStatus.UNAUTHORIZED,
-                    "Identificador do usuário inválido"
-            );
+            Cliente cliente = authClienteService.obterClienteAutenticado();
+
+            return exameRepository.findByClienteId(cliente.getId())
+                    .stream()
+                    .map(ExameResponseDTO::fromEntity)
+                    .toList();
         }
 
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.UNAUTHORIZED,
-                        "Usuário não encontrado"
-                ));
+        // BUSCAR EXAME POR ID
+        @Transactional(readOnly = true)
+        public ExameResponseDTO buscarPorId(UUID exameId) {
 
-        if (!(usuario instanceof Cliente cliente)) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Apenas clientes podem acessar exames"
-            );
+            Exame exame = buscarExameDoCliente(exameId);
+
+            return ExameResponseDTO.fromEntity(exame);
         }
 
-        return cliente;
-    }
+        // ATUALIZAR EXAME
+        @Transactional
+        public ExameResponseDTO atualizar(
+                UUID exameId,
+                ExameUpdateDTO dto
+        ) {
 
-    @Transactional
-    public ExameResponseDTO atualizar(
-            UUID exameId,
-            ExameUpdateDTO dto
-    ) {
+            Exame exame = buscarExameDoCliente(exameId);
 
-        Cliente cliente = obterClienteAutenticado();
+            validarAlteracaoStatus(exame.getStatus(), dto.status());
+            validarDatasExame(dto.status(), dto.dataRealizacao());
+            exame.setNome(dto.nome());
+            exame.setData(dto.data());
+            exame.setHora(dto.hora());
+            exame.setDataRealizacao(dto.dataRealizacao());
+            exame.setLocal(dto.local());
+            exame.setStatus(dto.status());
+            exame.setObservacao(dto.observacao());
 
-        Exame exame = exameRepository
-                .findByIdAndCliente_Id(exameId, cliente.getId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Exame não encontrado"
-                ));
-
-        validarAlteracaoStatus(exame.getStatus(), dto.status());
-        validarDatasExame(dto);
-
-        exame.setNome(dto.nome());
-        exame.setData(dto.data());
-        exame.setHora(dto.hora());
-        exame.setDataRealizacao(dto.dataRealizacao());
-        exame.setLocal(dto.local());
-        exame.setStatus(dto.status());
-        exame.setObservacao(dto.observacao());
-
-        Exame exameAtualizado = exameRepository.save(exame);
-
-        return ExameResponseDTO.fromEntity(exameAtualizado);
-    }
-
-    @Transactional
-    public void excluir(UUID exameId) {
-
-        Cliente cliente = obterClienteAutenticado();
-
-        Exame exame = exameRepository
-                .findByIdAndCliente_Id(exameId, cliente.getId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Exame não encontrado"
-                ));
-
-        exameRepository.delete(exame);
-    }
-
-
-    private void validarAlteracaoStatus(
-            StatusExame statusAtual,
-            StatusExame novoStatus
-    ) {
-
-        if (statusAtual == novoStatus) {
-            return;
+            return ExameResponseDTO.fromEntity(exame);
         }
 
-        if (statusAtual == StatusExame.CONCLUIDO ||
-                statusAtual == StatusExame.CANCELADO) {
+        // Excluir exames
+        @Transactional
+        public void excluir(UUID exameId) {
 
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Não é permitido alterar o status de um exame concluído ou cancelado"
-            );
+            Exame exame = buscarExameDoCliente(exameId);
+
+            exameRepository.delete(exame);
         }
 
-    }
+        // Auxiliar para buscar exame do cliente autenticado
+        private Exame buscarExameDoCliente(UUID exameId) {
 
-    private void validarDatasExame(ExameUpdateDTO dto) {
+            Cliente cliente = authClienteService.obterClienteAutenticado();
 
-        if (dto.status() == StatusExame.CONCLUIDO) {
+            return exameRepository
+                    .findByIdAndCliente_Id(exameId, cliente.getId())
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Exame não encontrado"
+                    ));
+        }
 
-            if (dto.dataRealizacao() == null) {
+        // Validações
+
+        private void validarAlteracaoStatus(
+                StatusExame statusAtual,
+                StatusExame novoStatus
+        ) {
+
+            if (statusAtual == novoStatus) {
+                return;
+            }
+
+            if (statusAtual == StatusExame.CONCLUIDO ||
+                    statusAtual == StatusExame.CANCELADO) {
+
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Não é permitido alterar o status de um exame concluído ou cancelado"
+                );
+            }
+
+        }
+
+        private void validarDatasExame(
+                StatusExame status,
+                LocalDate dataRealizacao
+        ) {
+
+            if (status == StatusExame.CONCLUIDO && dataRealizacao == null) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
                         "Exames concluídos devem possuir data de realização"
                 );
             }
-        }
 
-        if (dto.dataRealizacao() != null &&
-                dto.dataRealizacao().isAfter(LocalDate.now())) {
+            if (status != StatusExame.CONCLUIDO && dataRealizacao != null) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "A data de realização só pode ser informada em exames concluídos"
+                );
+            }
 
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "A data de realização não pode estar no futuro"
-            );
+            if (dataRealizacao != null &&
+                    dataRealizacao.isAfter(LocalDate.now(ZONA))) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "A data de realização não pode estar no futuro"
+                );
+            }
         }
     }
-
-}

@@ -8,11 +8,11 @@ import java.time.LocalTime;
 
 public record ExameUpdateDTO(
 
-        @NotBlank
+        @NotBlank(message = "O nome é obrigatório")
         @Size(max = 150)
         String nome,
 
-        @NotNull
+        @NotNull(message = "A Data é obrigatório")
         LocalDate data,
 
         LocalTime hora,
@@ -22,7 +22,7 @@ public record ExameUpdateDTO(
         @Size(max = 255)
         String local,
 
-        @NotNull
+        @NotNull(message = "O Status é obrigatório")
         StatusExame status,
 
         @Size(max = 255)

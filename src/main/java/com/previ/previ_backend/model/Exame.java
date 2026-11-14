@@ -45,7 +45,4 @@ public class Exame {
     @Column(name = "observacao", length = 255)
     private String observacao;
 
-    public Exame() {
-    }
-
 }

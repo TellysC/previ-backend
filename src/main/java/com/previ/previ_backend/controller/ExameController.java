@@ -4,9 +4,10 @@ import com.previ.previ_backend.dto.ExameResponseDTO;
 import com.previ.previ_backend.dto.ExameUpdateDTO;
 import com.previ.previ_backend.service.ExameService;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,9 +27,8 @@ public class ExameController {
     ) {
         ExameResponseDTO exame = exameService.cadastrar(dto);
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(exame);
+        URI location = URI.create("/api/exames/" + exame.id());
+        return ResponseEntity.created(location).body(exame);
     }
 
     @GetMapping
