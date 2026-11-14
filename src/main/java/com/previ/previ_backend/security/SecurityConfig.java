@@ -51,16 +51,41 @@ public class SecurityConfig {
                                 "/api/auth/register",
                                 "/api/auth/login"
                         ).permitAll()
+
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**"
                         ).permitAll()
+
+                        //ADMIN
+                        .requestMatchers("/api/admin/**")
+                            .hasRole("ADMIN")
+
+                        //Usuario
+                        .requestMatchers(
+                                "/api/usuarios/me",
+                                "/api/usuarios/me/**"
+                        ).hasAnyRole("ADMIN", "CLIENTE")
+
+                        //Cliente
+                        .requestMatchers(
+                                "/api/exames/**",
+                                "/api/consultas/**",
+                                "/api/ciclos/**",
+                                "/api/registros-diarios/**",
+                                "/api/vacinas/**",
+                                "/api/calendario/**"
+                        ).hasRole("CLIENTE")
+
                         .anyRequest().authenticated())
+
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(converter)))
+
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable());
+
         return http.build();
     }
 }

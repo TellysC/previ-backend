@@ -12,5 +12,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID>{
 
     Optional<Usuario> findByEmailIgnoreCase(String email);
 
+    Optional<Usuario> findByIdAndDeletedAtIsNull(UUID id);
+
+    Optional<Usuario> findByEmailIgnoreCaseAndDeletedAtIsNull(String email);
+
     boolean existsByEmailIgnoreCase(String email);
 }

@@ -14,19 +14,19 @@ import java.util.UUID;
 @Inheritance(strategy = InheritanceType.JOINED)
 @Getter
 @Setter
-public class Usuario {
+public class  Usuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, length = 250)
+    @Column(nullable = false, length = 255)
     private String nome;
 
-    @Column(nullable = false, length = 250, unique = true)
+    @Column(nullable = false, length = 255, unique = true)
     private String email;
 
-    @Column(nullable = false, length = 250)
+    @Column(nullable = false, length = 255)
     private String senha;
 
     @CreationTimestamp
@@ -40,6 +40,8 @@ public class Usuario {
     protected Usuario() {
     }
 
+    @Column(name= "deleted_at")
+    private LocalDateTime deletedAt;
 
     //Getters e Setters
 }

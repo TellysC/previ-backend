@@ -1,0 +1,2 @@
+ALTER TABLE usuarios
+ADD COLUMN deleted_at TIMESTAMP;
