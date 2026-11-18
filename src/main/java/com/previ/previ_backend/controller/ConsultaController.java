@@ -5,6 +5,7 @@ import com.previ.previ_backend.dto.ConsultaRequestDTO;
 import com.previ.previ_backend.dto.ConsultaResponseDTO;
 import com.previ.previ_backend.dto.ConsultaUpdateDTO;
 import com.previ.previ_backend.service.ConsultaService;
+import com.previ.previ_backend.dto.ConsultaRetornoRequestDTO;
 
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -60,5 +61,27 @@ public class ConsultaController {
         consultaService.excluir(id);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/retorno")
+    public ResponseEntity<ConsultaResponseDTO> agendarRetorno(
+            @PathVariable UUID id,
+            @Valid @RequestBody ConsultaRetornoRequestDTO dto
+    ) {
+        ConsultaResponseDTO retorno =
+                consultaService.agendarRetorno(id, dto);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(retorno);
+    }
+
+    @PatchMapping("/{id}/concluir")
+    public ResponseEntity<ConsultaResponseDTO> concluir(
+            @PathVariable UUID id
+    ) {
+        ConsultaResponseDTO consulta = consultaService.concluir(id);
+
+        return ResponseEntity.ok(consulta);
     }
 }

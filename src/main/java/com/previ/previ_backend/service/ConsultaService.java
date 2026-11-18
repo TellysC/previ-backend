@@ -8,6 +8,7 @@ import com.previ.previ_backend.enums.StatusConsulta;
 import com.previ.previ_backend.model.Cliente;
 import com.previ.previ_backend.model.Consulta;
 import com.previ.previ_backend.repository.ConsultaRepository;
+import com.previ.previ_backend.dto.ConsultaRetornoRequestDTO;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -152,5 +153,77 @@ public class ConsultaService {
                     "A data de realização só pode ser informada em consultas concluídas"
             );
         }
+    }
+
+    @Transactional
+    public ConsultaResponseDTO agendarRetorno(
+            UUID consultaId,
+            ConsultaRetornoRequestDTO dto
+    ) {
+        // Localiza a consulta e verifica se pertence à cliente autenticada
+        Consulta consultaOriginal = buscarConsultaDoCliente(consultaId);
+
+        // Somente consultas concluídas podem gerar retornos
+        if (consultaOriginal.getStatus() != StatusConsulta.CONCLUIDA) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Somente consultas concluídas podem gerar retornos"
+            );
+        }
+
+        // Cria uma nova consulta vinculada à original
+        Consulta retorno = new Consulta();
+
+        retorno.setCliente(consultaOriginal.getCliente());
+        retorno.setConsultaOrigem(consultaOriginal);
+        retorno.setEspecialidade(consultaOriginal.getEspecialidade());
+        retorno.setProfissional(dto.profissional() != null
+                ? dto.profissional()
+                : consultaOriginal.getProfissional());
+        retorno.setData(dto.data());
+        retorno.setHora(dto.hora());
+        retorno.setLocal(dto.local() != null
+                ? dto.local()
+                : consultaOriginal.getLocal());
+        retorno.setObservacao(dto.observacao());
+        retorno.setStatus(StatusConsulta.AGENDADA);
+
+        Consulta retornoSalvo = consultaRepository.save(retorno);
+
+        return ConsultaResponseDTO.fromEntity(retornoSalvo);
+    }
+
+    @Transactional
+    public ConsultaResponseDTO concluir(UUID consultaId) {
+
+        Consulta consulta = buscarConsultaDoCliente(consultaId);
+
+        if (consulta.getStatus() == StatusConsulta.CONCLUIDA) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Esta consulta já foi concluída"
+            );
+        }
+
+        if (consulta.getStatus() == StatusConsulta.CANCELADA) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Não é possível concluir uma consulta cancelada"
+            );
+        }
+
+        LocalDate hoje = LocalDate.now(ZONA);
+
+        if (consulta.getData().isAfter(hoje)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Não é possível concluir uma consulta futura"
+            );
+        }
+
+        consulta.setStatus(StatusConsulta.CONCLUIDA);
+        consulta.setDataRealizacao(hoje);
+
+        return ConsultaResponseDTO.fromEntity(consulta);
     }
 }
