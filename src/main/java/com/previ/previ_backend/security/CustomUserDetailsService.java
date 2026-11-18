@@ -26,7 +26,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         String perfil;
         if (usuario instanceof Administrador) {
-            perfil = "ADMINISTRADOR";
+            perfil = "ADMIN";
         } else if (usuario instanceof Cliente) {
             perfil = "CLIENTE";
         } else {

@@ -68,6 +68,12 @@ public class SecurityConfig {
                                 "/api/usuarios/me/**"
                         ).hasAnyRole("ADMIN", "CLIENTE")
 
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/conteudos",
+                                "/api/conteudos/**"
+                        ).hasAnyRole("ADMIN", "CLIENTE")
+
                         //Cliente
                         .requestMatchers(
                                 "/api/exames/**",
@@ -78,7 +84,7 @@ public class SecurityConfig {
                                 "/api/calendario/**"
                         ).hasRole("CLIENTE")
 
-                        .anyRequest().authenticated())
+                        .anyRequest().denyAll())
 
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(converter)))
