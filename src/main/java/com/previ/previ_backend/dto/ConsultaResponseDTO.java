@@ -17,7 +17,8 @@ public record ConsultaResponseDTO(
         LocalDate dataRealizacao,
         String local,
         StatusConsulta status,
-        String observacao
+        String observacao,
+        UUID consultaOrigemId
 ) {
 
     public static ConsultaResponseDTO fromEntity(Consulta consulta) {
@@ -30,7 +31,10 @@ public record ConsultaResponseDTO(
                 consulta.getDataRealizacao(),
                 consulta.getLocal(),
                 consulta.getStatus(),
-                consulta.getObservacao()
+                consulta.getObservacao(),
+                consulta.getConsultaOrigem() != null
+                        ? consulta.getConsultaOrigem().getId()
+                        : null
         );
     }
 }

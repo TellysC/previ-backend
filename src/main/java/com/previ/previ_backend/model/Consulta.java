@@ -47,4 +47,8 @@ public class Consulta {
 
     @Column(length = 255)
     private String observacao;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "consulta_origem_id")
+    private Consulta consultaOrigem;
 }
